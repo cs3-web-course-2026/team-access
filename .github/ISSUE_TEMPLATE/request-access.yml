@@ -1,5 +1,5 @@
-name: Запрос доступа к команде
-description: Выберите команду, к репозиториям которой нужен доступ
+name: Запит у команду
+description: Оберіть командудо якої потрібен доступ
 labels: ["access-request"]
 body:
   - type: dropdown
