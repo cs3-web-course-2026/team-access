@@ -1,0 +1,42 @@
+name: Grant team access on approval
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  grant:
+    if: >
+      github.event.review.state == 'approved' &&
+      github.event.review.user.login == 'iamredl-lab'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract team + user from labels
+        id: meta
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = context.payload.pull_request.labels.map(l => l.name);
+            core.setOutput('team', labels.find(l => l.startsWith('team:'))?.split(':')[1]);
+            core.setOutput('user', labels.find(l => l.startsWith('user:'))?.split(':')[1]);
+
+      - name: Add user to GitHub team
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.ORG_ADMIN_TOKEN }}
+          script: |
+            await github.rest.teams.addOrUpdateMembershipForUserInOrg({
+              org: 'cs3-web-course-2026',
+              team_slug: '${{ steps.meta.outputs.team }}',
+              username: '${{ steps.meta.outputs.user }}',
+              role: 'member'
+            });
+
+      - name: Merge PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.pulls.merge({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.payload.pull_request.number
+            });

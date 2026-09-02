@@ -1,0 +1,13 @@
+name: Запрос доступа к команде
+description: Выберите команду, к репозиториям которой нужен доступ
+labels: ["access-request"]
+body:
+  - type: dropdown
+    id: team
+    attributes:
+      label: Команда
+      options:
+        - cs-31
+        - cs-32
+    validations:
+      required: true

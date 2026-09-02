@@ -1,0 +1,35 @@
+name: Create access-request PR
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  create-pr:
+    if: contains(github.event.issue.labels.*.name, 'access-request')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parse team from issue
+        id: parse
+        uses: stefanbuck/github-issue-parser@v3
+        with:
+          template-path: .github/ISSUE_TEMPLATE/request-access.yml
+
+      - name: Create request marker file
+        run: |
+          mkdir -p requests
+          echo "requested: $(date -u +%Y-%m-%dT%H:%M:%SZ)" > \
+            "requests/${{ github.event.issue.user.login }}--${{ steps.parse.outputs.issueparser_team }}.md"
+
+      - name: Open PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: access/${{ github.event.issue.user.login }}-${{ steps.parse.outputs.issueparser_team }}
+          title: "Access request: ${{ github.event.issue.user.login }} → ${{ steps.parse.outputs.issueparser_team }}"
+          body: "Closes #${{ github.event.issue.number }}"
+          labels: |
+            access-request
+            team:${{ steps.parse.outputs.issueparser_team }}
+            user:${{ github.event.issue.user.login }}
+          reviewers: iamredl-lab
